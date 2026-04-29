@@ -46,6 +46,31 @@ def init_weights(m):
         m.bias.data.fill_(0.01)
 
 
+class GaussianNoise:
+    """Decaying Gaussian exploration noise for TD3 (paper Eq. 11)."""
+
+    def __init__(
+        self,
+        action_shape,
+        device,
+        max_sigma=0.5,
+        min_sigma=0.05,
+        decay_period=100000,
+    ):
+        self.max_sigma = max_sigma
+        self.min_sigma = min_sigma
+        self.decay_period = decay_period
+        self.action_dim = action_shape
+        self.device = device
+
+    def get_action(self, action, t=0):
+        sigma = self.max_sigma - (self.max_sigma - self.min_sigma) * min(
+            1.0, t / self.decay_period
+        )
+        noise = torch.randn(self.action_dim).to(self.device) * sigma
+        return action + noise
+
+
 class OUNoise(object):
     def __init__(
         self,

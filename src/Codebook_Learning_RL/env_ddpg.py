@@ -34,6 +34,7 @@ class envCB:
         self.gain_history = [0]
         self.EGC_history = []
         self.experiment_path = experiment_path
+        self.reward_type = options.get("reward_type", "binary")
 
     def step(
         self, input_action
@@ -53,19 +54,29 @@ class envCB:
 
     def reward_fn(self):
         bf_gain = self.bf_gain_cal()
-        if bf_gain > self.previous_gain:
+        if self.reward_type == "ternary":
+            # Paper Eq. 22: {-1, 0, +1} ternary reward
             if bf_gain > self.threshold:
                 reward = np.array([1]).reshape((1, 1))
-                self.threshold = self.threshold_modif(bf_gain)
-            else:
-                reward = np.array([1]).reshape((1, 1))
-        else:
-            if bf_gain > self.threshold:
-                reward = np.array([1]).reshape((1, 1))
-                self.threshold = self.threshold_modif(bf_gain)
-
+                self.threshold_modif(bf_gain)
+            elif bf_gain > self.previous_gain:
+                reward = np.array([0]).reshape((1, 1))
             else:
                 reward = np.array([-1]).reshape((1, 1))
+        else:
+            # Binary reward: original behavior
+            if bf_gain > self.previous_gain:
+                if bf_gain > self.threshold:
+                    reward = np.array([1]).reshape((1, 1))
+                    self.threshold = self.threshold_modif(bf_gain)
+                else:
+                    reward = np.array([1]).reshape((1, 1))
+            else:
+                if bf_gain > self.threshold:
+                    reward = np.array([1]).reshape((1, 1))
+                    self.threshold = self.threshold_modif(bf_gain)
+                else:
+                    reward = np.array([-1]).reshape((1, 1))
         self.previous_gain = self.previous_gain_pred
         return reward, bf_gain
 
@@ -81,24 +92,29 @@ class envCB:
 
         inner_bf = self.phase2bf(action_quant)
         bf_gain = self.bf_gain_cal_only(inner_bf)
-        if bf_gain > self.previous_gain:  # -1/1 reward mechanism
-            if bf_gain > self.threshold:  # legacy
-                reward = np.array([1]).reshape((1, 1))
-                self.threshold = self.threshold_modif_get_reward(
-                    inner_bf, bf_gain
-                )
 
-            else:
-                reward = np.array([1]).reshape((1, 1))
-        else:
+        if self.reward_type == "ternary":
             if bf_gain > self.threshold:
                 reward = np.array([1]).reshape((1, 1))
-                self.threshold = self.threshold_modif_get_reward(
-                    inner_bf, bf_gain
-                )
-
+                self.threshold = self.threshold_modif_get_reward(inner_bf, bf_gain)
+            elif bf_gain > self.previous_gain:
+                reward = np.array([0]).reshape((1, 1))
             else:
                 reward = np.array([-1]).reshape((1, 1))
+        else:
+            # Binary reward: original behavior
+            if bf_gain > self.previous_gain:
+                if bf_gain > self.threshold:
+                    reward = np.array([1]).reshape((1, 1))
+                    self.threshold = self.threshold_modif_get_reward(inner_bf, bf_gain)
+                else:
+                    reward = np.array([1]).reshape((1, 1))
+            else:
+                if bf_gain > self.threshold:
+                    reward = np.array([1]).reshape((1, 1))
+                    self.threshold = self.threshold_modif_get_reward(inner_bf, bf_gain)
+                else:
+                    reward = np.array([-1]).reshape((1, 1))
 
         self.previous_gain_pred = bf_gain + 0.1
         self.count += 1

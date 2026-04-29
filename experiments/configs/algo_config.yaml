@@ -1,8 +1,11 @@
 exp_name: "sac_NLOS_seed_0"
-    
-algo: "sac" #sac or td3 or ddpg
+
+algo: "sac"          # sac | td3 | ddpg
 
 seed: 0
+
+# reward function: "binary" {-1,+1} or "ternary" {-1,0,+1} (paper Eq. 22)
+reward_type: "ternary"
 
 buffer_size: 8192
 
@@ -10,7 +13,7 @@ batch_size: 1024
 
 gamma: 0
 
-device: "cuda:14"
+device: "cuda:0"
 
 torch_deterministic: true
 
@@ -30,14 +33,25 @@ alpha: 0.2
 
 use_burning_action: false
 
-target_network_frequency: 1 
+target_network_frequency: 1
 
 tau: 0.001
 
 policy_frequency: 1
 
+# TD3 Gaussian exploration noise (paper Eq. 11): N(0, sigma), sigma decays linearly
+td3_noise_max: 0.5
+td3_noise_min: 0.05
+td3_noise_decay: 100000
+
+# ── Quantum VQC settings (algo: quantum_sac) ──────────────────────────────
+# n_qubits: null means "use num_ant" → direct 1:1 qubit-antenna mapping
+# Start with num_ant=2, n_qubits=2 for debugging; scale up gradually.
+n_qubits: null            # null | 2 | 4 | 8 | 16
+n_layers: 2               # variational circuit depth
+diff_method: "backprop"   # "backprop" (fast, sim-only) | "parameter-shift" (hw-compatible)
 
 state: 0
 overall_iter: 1
 best_state: 0
-num_iter: 100 
+num_iter: 100

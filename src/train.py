@@ -106,8 +106,8 @@ def train(env, options, train_options, agent, beam_id, writer, noise):
         reward_pred = torch.from_numpy(reward_pred).float().to(device)
 
         algo = train_options["algo"]
-        if algo == "sac":
-            # SAC handles exploration through stochastic policy internally
+        if algo in ("sac", "quantum_sac"):
+            # SAC / Q-SAC handle exploration through stochastic policy internally
             action_pred_noisy = action
         else:
             # TD3: Gaussian noise (paper Eq. 11); DDPG: Ornstein-Uhlenbeck noise

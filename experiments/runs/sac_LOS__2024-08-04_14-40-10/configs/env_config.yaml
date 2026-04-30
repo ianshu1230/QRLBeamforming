@@ -1,9 +1,0 @@
-ch_sample_ratio: 0.5
-clustering_mode: random
-device: cuda:15
-num_NNs: 4
-num_ant: 32
-num_bits: 4
-num_loop: 1000
-path: src/Codebook_Learning_RL/grid1101-1400.mat
-target_update: 3

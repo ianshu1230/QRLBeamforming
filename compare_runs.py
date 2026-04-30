@@ -182,6 +182,21 @@ def main():
         label = make_label(r, group_keys)
         groups[label].append(r)
 
+    # ── Sanity check: fixed params must be identical within each group ─────
+    FIXED_PARAMS = ["num_ant", "num_NNs", "scenario", "reward_type"]
+    any_warn = False
+    for label, members in groups.items():
+        for param in FIXED_PARAMS:
+            if param in group_keys:
+                continue  # this param IS the grouping axis — skip
+            vals = set(str(m.get(param)) for m in members)
+            if len(vals) > 1:
+                print(f"  [WARN] group {label!r}: {param} is not consistent → {vals}")
+                any_warn = True
+    if any_warn:
+        print("  Runs with different system parameters are being averaged together.")
+        print("  Use --filter to narrow down, or add the parameter to --group_by.\n")
+
     print(f"\nGroups ({args.group_by}):")
     for label, members in sorted(groups.items()):
         seeds = sorted(set(m["seed"] for m in members))

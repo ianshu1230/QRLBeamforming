@@ -90,6 +90,39 @@ tensorboard --logdir=experiments/runs
 tensorboard --logdir=experiments/runs/<run_name>
 ```
 
+### Cross-run comparison plots
+
+After training, use `compare_runs.py` to compare multiple runs in a single figure.
+Results are saved to `experiments/comparisons/`. Each call produces two figures:
+a convergence curve (mean ± std across seeds) and a final-gain bar chart.
+
+```bash
+# SAC across antenna counts (classical_small group)
+python compare_runs.py --filter "sac_nlos_.*ant_2beam" --group_by num_ant
+
+# Q-SAC across VQC circuit depths
+python compare_runs.py --filter "quantum_sac_nlos_2ant" --group_by n_layers
+
+# SAC vs Q-SAC — fair comparison (same 2 ant, 2 beam)
+python compare_runs.py --filter ".*nlos_2ant_2beam" --group_by algo
+
+# SAC 32-antenna runs — convergence across seeds
+python compare_runs.py --filter "sac_nlos_32ant" --group_by algo
+```
+
+**All options:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `--runs_dir` | `experiments/runs` | path to runs folder |
+| `--filter` | *(match all)* | regex applied to run folder name |
+| `--group_by` | `algo` | config key(s) to group by, comma-separated: `algo`, `num_ant`, `n_layers`, `num_NNs`, `scenario` |
+| `--out` | `experiments/comparisons` | output folder for figures |
+| `--smooth` | `0` | Gaussian smoothing sigma in outer-loop units |
+| `--max_loops` | *(no limit)* | truncate all curves to this many outer loops |
+
+> **Note:** always pair `--filter` with `--group_by` to ensure runs in each group share the same system parameters (antenna count, codebook size, scenario). Mixing runs with different `num_ant` in one group will produce misleading averages even after normalisation.
+
 ---
 
 ## Output structure
